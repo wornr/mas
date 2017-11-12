@@ -116,11 +116,6 @@ public class ProducerAgent extends Agent {
 				if (tokens.isEmpty() && id == maxTokens) {
 					System.out.println("\n\n\nAll tokens have been distributed:");
 					givenTokens.entrySet().stream().sorted(Map.Entry.<String, Integer> comparingByKey()).forEach(System.out::println);
-					/*Iterator<String> set = givenTokens.keySet().iterator();
-					while (set.hasNext()) {
-						String key = set.next();
-						System.out.println("\t" + key + ":\t" + givenTokens.get(key));
-					}*/
 					removeBehaviour(this);
 				}
 			}
