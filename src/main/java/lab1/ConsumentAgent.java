@@ -15,10 +15,9 @@ import jade.lang.acl.MessageTemplate;
 
 @SuppressWarnings("serial")
 public class ConsumentAgent extends Agent {
-	final private int interval = new Random().nextInt(1000) + 1000;
+	final private int interval = new Random().nextInt(75) + 25;
 	private boolean sleep = false;
 	private AID[] producerAgents;
-	private int tokensTaken = 0;
 	public TickerBehaviour tickerBehaviour;
 
 	protected void setup() {
@@ -46,9 +45,10 @@ public class ConsumentAgent extends Agent {
 						ex.printStackTrace();
 					}
 					
-					addBehaviour(new RequestPerformer(agent));
+					if (producerAgents.length > 0)
+						addBehaviour(new RequestPerformer(agent));
 				} else {
-					System.out.println("Czekam na zakonczenie cyklu obliczeniowego.");
+					//System.out.println(getAID().getLocalName() + ":WAITING...");
 					sleep = false;
 				}
 			}
@@ -60,46 +60,41 @@ public class ConsumentAgent extends Agent {
 	}
 	
 	private class RequestPerformer extends Behaviour {
-		private ConsumentAgent agent;
 		private int step = 0;
 		private MessageTemplate mt;
 		
 		public RequestPerformer(ConsumentAgent agent) {
-			super();
-			this.agent = agent;
+			super(agent);
 		}
-		
+
 		@Override
 		public void action() {
 			switch(step) {
 				case 0:
 					ACLMessage cfp = new ACLMessage(ACLMessage.REQUEST);
 					cfp.addReceiver(producerAgents[0]);
-					cfp.setContent(agent.getLocalName());
-					cfp.setReplyWith(agent.getName() + System.currentTimeMillis());
-					agent.send(cfp);
-					System.out.println("Prosze o przekazanie tokena");
+					cfp.setContent(getLocalName());
+					cfp.setReplyWith(getName() + System.currentTimeMillis());
+					send(cfp);
+					System.out.println(getAID().getLocalName() + ": REQUEST");
 					mt = MessageTemplate.MatchInReplyTo(cfp.getReplyWith());
 					step = 1;
-					break;
+				break;
 					
 				case 1:
-					ACLMessage reply = agent.receive(mt);
+					ACLMessage reply = receive(mt);
 					if (reply != null) {
 						if (reply.getPerformative() == ACLMessage.CONFIRM) {
-							agent.tokensTaken++;
-							System.out.println("Posiadam juz " + agent.tokensTaken + " tokenow");
 						} else if (reply.getPerformative() == ACLMessage.FAILURE) {
-							System.out.println("Nie bede juz odpytywal o kolejne tokeny");
-							agent.removeBehaviour(agent.tickerBehaviour);
+							//System.out.println(getAID().getLocalName() + "I won't ask for more tokens");
+							removeBehaviour(tickerBehaviour);
 						}
 						step = 2;
 						sleep = true;
 					} else {
 						block();
 					}
-					
-					break;
+				break;
 			}
 		}
 

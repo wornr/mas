@@ -1,10 +1,12 @@
 package lab1;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -19,8 +21,9 @@ import jade.lang.acl.MessageTemplate;
 @SuppressWarnings("serial")
 public class ProducerAgent extends Agent {
 	private Integer id = 0;
+	private int maxTokens = 100;
 	private Queue<String> tokens = new LinkedList<String>();
-	private Hashtable<String, Integer> givenTokens = new Hashtable<String, Integer>();
+	private Map<String, Integer> givenTokens = new HashMap<String, Integer>();
 	public CyclicBehaviour mainBehaviour;
 	
 	protected void setup() {
@@ -38,17 +41,11 @@ public class ProducerAgent extends Agent {
 			ex.printStackTrace();
 		}
 		
-		produceTokens(2500);
+		Object[] args = getArguments();
+		if (args != null && args.length > 0) maxTokens = Integer.parseInt(args[0].toString());
+		produceTokens(100);
 		giveTokens();
 		listGivenTokens();
-	}
-	
-	protected void takeDown() {
-		try {
-			DFService.deregister(this);
-		} catch (FIPAException ex) {
-			ex.printStackTrace();
-		}
 	}
 	
 	private void produceTokens(int interval) {
@@ -56,12 +53,10 @@ public class ProducerAgent extends Agent {
 			
 			@Override
 			protected void onTick() {
-				if (id < 100) {
+				if (id < maxTokens) {
 					tokens.add(id.toString());
-					System.out.println("Successfully produced token " + id);
+					System.out.println("\t" + getAID().getLocalName() + ":\tcreated token " + id);
 					id++;
-					System.out.println("Next token will be " + id);
-					System.out.println();
 				} else {
 					removeBehaviour(this);
 				}
@@ -85,7 +80,7 @@ public class ProducerAgent extends Agent {
 						reply.setPerformative(ACLMessage.CONFIRM);
 						reply.setContent(token);
 						itr.remove();
-						System.out.println("Przekazuje token " + token);
+						System.out.println("\t" + getAID().getLocalName() + ":\tgiving token " + token);
 						if (givenTokens.get(msg.getContent()) == null) {
 							givenTokens.put(msg.getContent(), 1);
 						} else {
@@ -95,14 +90,14 @@ public class ProducerAgent extends Agent {
 						}
 						
 					} else {
-						if (id == 100) {
+						if (id == maxTokens) {
 							reply.setPerformative(ACLMessage.FAILURE);
 							reply.setContent("not-available");
-							System.out.println("Nie bedzie juz wiecej tokenow");
+							System.out.println("\t" + getAID().getLocalName() + ":\tno more tokens will be available");
 						} else {
 							reply.setPerformative(ACLMessage.INFORM);
 							reply.setContent("not-available");
-							System.out.println("Brak dostepnych tokenow");
+							System.out.println("\t" + getAID().getLocalName() + ":\ttokens currently not available");
 						}
 					}
 					send(reply);
@@ -118,13 +113,14 @@ public class ProducerAgent extends Agent {
 
 			@Override
 			protected void onTick() {
-				if (tokens.isEmpty() && id == 100) {
-					System.out.println("Rozdano wszystkie tokeny");
-					Enumeration<String> enumeration = givenTokens.keys();
-					while (enumeration.hasMoreElements()) {
-						String key = enumeration.nextElement();
-						System.out.println(key + ": " + givenTokens.get(key));
-					}
+				if (tokens.isEmpty() && id == maxTokens) {
+					System.out.println("\n\n\nAll tokens have been distributed:");
+					givenTokens.entrySet().stream().sorted(Map.Entry.<String, Integer> comparingByKey()).forEach(System.out::println);
+					/*Iterator<String> set = givenTokens.keySet().iterator();
+					while (set.hasNext()) {
+						String key = set.next();
+						System.out.println("\t" + key + ":\t" + givenTokens.get(key));
+					}*/
 					removeBehaviour(this);
 				}
 			}
