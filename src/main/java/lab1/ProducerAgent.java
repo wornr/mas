@@ -2,11 +2,9 @@ package lab1;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-import java.util.stream.Collectors;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -45,7 +43,6 @@ public class ProducerAgent extends Agent {
 		if (args != null && args.length > 0) maxTokens = Integer.parseInt(args[0].toString());
 		produceTokens(100);
 		giveTokens();
-		listGivenTokens();
 	}
 	
 	private void produceTokens(int interval) {
@@ -93,7 +90,7 @@ public class ProducerAgent extends Agent {
 						if (id == maxTokens) {
 							reply.setPerformative(ACLMessage.FAILURE);
 							reply.setContent("not-available");
-							System.out.println("\t" + getAID().getLocalName() + ":\tno more tokens will be available");
+//							System.out.println("\t" + getAID().getLocalName() + ":\tno more tokens will be available");
 						} else {
 							reply.setPerformative(ACLMessage.INFORM);
 							reply.setContent("not-available");
@@ -103,20 +100,6 @@ public class ProducerAgent extends Agent {
 					send(reply);
 				} else {
 					block();
-				}
-			}
-		});
-	}
-	
-	private void listGivenTokens() {
-		addBehaviour(new TickerBehaviour(this, 100) {
-
-			@Override
-			protected void onTick() {
-				if (tokens.isEmpty() && id == maxTokens) {
-					System.out.println("\n\n\nAll tokens have been distributed:");
-					givenTokens.entrySet().stream().sorted(Map.Entry.<String, Integer> comparingByKey()).forEach(System.out::println);
-					removeBehaviour(this);
 				}
 			}
 		});

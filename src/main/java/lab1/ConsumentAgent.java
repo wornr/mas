@@ -18,6 +18,7 @@ public class ConsumentAgent extends Agent {
 	final private int interval = new Random().nextInt(75) + 25;
 	private boolean sleep = false;
 	private AID[] producerAgents;
+	private int tokensTaken = 0;
 	public TickerBehaviour tickerBehaviour;
 
 	protected void setup() {
@@ -76,7 +77,7 @@ public class ConsumentAgent extends Agent {
 					cfp.setContent(getLocalName());
 					cfp.setReplyWith(getName() + System.currentTimeMillis());
 					send(cfp);
-					System.out.println(getAID().getLocalName() + ": REQUEST");
+					//System.out.println(getAID().getLocalName() + ": REQUEST");
 					mt = MessageTemplate.MatchInReplyTo(cfp.getReplyWith());
 					step = 1;
 				break;
@@ -85,8 +86,9 @@ public class ConsumentAgent extends Agent {
 					ACLMessage reply = receive(mt);
 					if (reply != null) {
 						if (reply.getPerformative() == ACLMessage.CONFIRM) {
+							tokensTaken++;
 						} else if (reply.getPerformative() == ACLMessage.FAILURE) {
-							//System.out.println(getAID().getLocalName() + "I won't ask for more tokens");
+							System.out.println(getAID().getLocalName() + ": " + tokensTaken);
 							removeBehaviour(tickerBehaviour);
 						}
 						step = 2;
