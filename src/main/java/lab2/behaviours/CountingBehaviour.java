@@ -1,8 +1,12 @@
 package lab2.behaviours;
 
+import java.io.IOException;
+import java.util.Random;
+
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import lab2.agents.CountingAgent;
 import lab2.enums.CountingAgentStatus;
 import lab2.helpers.DFServiceHelper;
@@ -46,23 +50,44 @@ public class CountingBehaviour extends CyclicBehaviour {
 		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchReplyWith(agent.getLocalName()), MessageTemplate.MatchPerformative(ACLMessage.CFP));
 		ACLMessage msg = agent.receive(mt);
 		if (msg != null) {
-			System.out.println(agent.getLocalName() + ": rozpoczynam obliczenia");
-			agent.setStatus(CountingAgentStatus.Busy);
 			ACLMessage reply = msg.createReply();
+			agent.setStatus(CountingAgentStatus.Busy);
 			try {
 				mf = (MatrixFragment) msg.getContentObject();
-				mf.setResult(calculate(mf));
-				reply.setContentObject(mf);
-				reply.setPerformative(ACLMessage.CONFIRM);
-			} catch (Exception e) {
+			} catch (UnreadableException e) {
 				e.printStackTrace();
 			}
 			
-			System.out.println(agent.getLocalName() + ": oczekuje " + agent.getDelay() + "ms");
-			agent.doWait(agent.getDelay());
-			
-			System.out.println(agent.getLocalName() + ": przesylam wynik");
-			agent.send(reply);
+			if (new Random().nextInt(100) > 20) {
+				reply.setPerformative(ACLMessage.CONFIRM);
+				
+				System.out.println(agent.getLocalName() + ": rozpoczynam obliczenia");
+				mf.setResult(calculate(mf));
+				try {
+					reply.setContentObject(mf);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}				
+				
+				System.out.println(agent.getLocalName() + ": oczekuje " + agent.getDelay() + "ms");
+				agent.doWait(agent.getDelay());
+				
+				System.out.println(agent.getLocalName() + ": przesylam wynik");
+				agent.send(reply);
+			} else {
+				reply.setPerformative(ACLMessage.FAILURE);
+				
+				System.out.println(agent.getLocalName() + ": nastapila awaria");
+				try {
+					reply.setContentObject(mf);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				agent.send(reply);
+				
+				System.out.println(agent.getLocalName() + ": oczekuje 2000 ms");
+				agent.doWait(agent.getDelay());
+			}
 		}
 	}
 	

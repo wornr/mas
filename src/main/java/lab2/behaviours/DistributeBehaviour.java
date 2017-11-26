@@ -33,6 +33,7 @@ public class DistributeBehaviour extends CyclicBehaviour {
 		refreshCountingAgents();
 		sendMatrix();
 		receiveResult();
+		receiveFailure();
 	}
 	
 	private void refreshCountingAgents() {
@@ -104,6 +105,27 @@ public class DistributeBehaviour extends CyclicBehaviour {
 				if (MatrixFragmentState.Calculated.equals(mf.getState()))
 					agent.getResultMatrix().setValue(mf.getRowIndex(), mf.getColIndex(), mf.getResult());
 				System.out.println(agent.getLocalName() + ": otrzymalem wynik fragmentu (" + mf.getRowIndex() + ";" + mf.getColIndex() + ") od agenta " + msg.getSender().getLocalName());
+			} catch (UnreadableException e) {
+				e.printStackTrace();
+			}
+			
+			//printMatrix(agent.getResultMatrix()); // wyswietlanie macierzy
+		}
+	}
+	
+	private void receiveFailure() {
+		MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.FAILURE);
+		ACLMessage msg = agent.receive(mt);
+		if (msg != null) {
+			try {
+				MatrixFragment received = (MatrixFragment) msg.getContentObject();
+				for (MatrixFragment mf : agent.getMatrixFragments()) {
+					if (mf.getColIndex() == received.getColIndex() && mf.getRowIndex() == received.getRowIndex()) {
+						mf.setState(MatrixFragmentState.InQueue);
+						break;
+					}						
+				}
+				System.out.println(agent.getLocalName() + ": otrzymalem zgloszenie bledu od agenta " + msg.getSender().getLocalName());
 			} catch (UnreadableException e) {
 				e.printStackTrace();
 			}
