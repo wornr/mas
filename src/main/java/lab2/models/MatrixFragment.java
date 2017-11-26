@@ -1,20 +1,30 @@
 package lab2.models;
 
-public class MatrixFragment {
+import java.io.Serializable;
+
+import lab2.enums.MatrixFragmentState;
+
+public class MatrixFragment implements Serializable {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7521433019960706969L;
 	
 	private int rowIndex;
 	private int colIndex;
 	private double[] row;
 	private double[] col;
 	
-	private boolean calculated;
-	
+	private double result;
+	private MatrixFragmentState state;
+		
 	public MatrixFragment(int rowIndex, int colIndex, double[] row, double[] col) {
 		this.rowIndex = rowIndex;
 		this.colIndex = colIndex;
 		this.row = row;
 		this.col = col;
-		this.setCalculated(false);
+		this.state = MatrixFragmentState.InQueue;
 	}
 
 	public int getRowIndex() {
@@ -32,13 +42,22 @@ public class MatrixFragment {
 	public double[] getCol() {
 		return col;
 	}
-
-	public boolean isCalculated() {
-		return calculated;
+	
+	public double getResult() {
+		return result;
+	}
+	
+	public void setResult(double result) {
+		this.result = result;
+		this.state = MatrixFragmentState.Calculated;
 	}
 
-	public void setCalculated(boolean calculated) {
-		this.calculated = calculated;
+	public MatrixFragmentState getState() {
+		return state;
+	}
+	
+	public void setState(MatrixFragmentState state) {
+		this.state = state;
 	}
 	
 	public int getSize() {
