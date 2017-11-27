@@ -3,11 +3,11 @@ package lab2.agents;
 import java.util.ArrayList;
 import java.util.List;
 
-import jade.core.AID;
 import jade.core.Agent;
 import lab2.behaviours.DistributeBehaviour;
 import lab2.helpers.DFServiceHelper;
-import lab2.helpers.MatrixFragmentGenerator;
+import lab2.helpers.MatrixHelper;
+import lab2.models.CountingAgentInfo;
 import lab2.models.Matrix;
 import lab2.models.MatrixFragment;
 
@@ -15,21 +15,19 @@ import lab2.models.MatrixFragment;
 public class DistributorAgent extends Agent {
 	
 	private List<MatrixFragment> matrixFragments;
-	private List<AID> countingAgents;
+	private List<CountingAgentInfo> countingAgents;
 	private Matrix resultMatrix;
 	
 	@Override
 	protected void setup() {
+		DFServiceHelper.getInstance().register(this, "matrixDistributor", "distributor");
 		
-		// TODO dodac jakies sensowniejsze ladowanie macierzy
-		Matrix mA = new Matrix(2, 3, new double[][] {{8, 2 ,6}, {1, 5, 3}});
-		Matrix mB = new Matrix(3, 2, new double[][] {{8, 2}, {1, 5}, {4, 0}});
-		resultMatrix = new Matrix(2, 2);
+		Matrix mA = MatrixHelper.getInstance().readMatrixFile("A.txt");
+		Matrix mB = MatrixHelper.getInstance().readMatrixFile("B.txt");
+		matrixFragments = MatrixHelper.getInstance().generateFragments(mA, mB);
+		resultMatrix = MatrixHelper.getInstance().prepareResultMatrix(mA, mB);
 		
 		countingAgents = new ArrayList<>();
-		matrixFragments = MatrixFragmentGenerator.getInstance().generateFragments(mA, mB);
-		
-		DFServiceHelper.getInstance().register(this, "matrixDistributor", "distributor");
 		
 		addBehaviour(new DistributeBehaviour(this));
 	}
@@ -38,8 +36,12 @@ public class DistributorAgent extends Agent {
 		return matrixFragments;
 	}
 	
-	public List<AID> getCountingAgents() {
+	public List<CountingAgentInfo> getCountingAgents() {
 		return countingAgents;
+	}
+	
+	public void setCountingAgents(List<CountingAgentInfo> countingAgents) {
+		this.countingAgents = countingAgents;
 	}
 	
 	public Matrix getResultMatrix() {

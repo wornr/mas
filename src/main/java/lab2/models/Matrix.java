@@ -17,6 +17,21 @@ public class Matrix {
 		this.columns = columns;
 		this.values = values;
 	}
+	
+	@Override
+	public String toString() {
+		StringBuilder matrixStringRepresentation = new StringBuilder();
+		
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < columns; j++) {
+				matrixStringRepresentation.append(values[i][j]);
+				matrixStringRepresentation.append(" ");
+			}
+			matrixStringRepresentation.append("\n");
+		}
+		
+		return matrixStringRepresentation.toString();
+	}
 
 	public int getRows() {
 		return rows;

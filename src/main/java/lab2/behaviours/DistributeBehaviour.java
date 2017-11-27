@@ -13,14 +13,12 @@ import lab2.enums.CountingAgentStatus;
 import lab2.enums.MatrixFragmentState;
 import lab2.helpers.DFServiceHelper;
 import lab2.models.CountingAgentInfo;
-import lab2.models.Matrix;
 import lab2.models.MatrixFragment;
 
 @SuppressWarnings("serial")
 public class DistributeBehaviour extends CyclicBehaviour {
 	
 	private DistributorAgent agent;
-	private List<CountingAgentInfo> countingAgents;
 	
 	public DistributeBehaviour(DistributorAgent agent) {
 		super();
@@ -42,8 +40,8 @@ public class DistributeBehaviour extends CyclicBehaviour {
 		
 		for (CountingAgentInfo newCountingAgent : newCountingAgents) {
 			boolean exists = false;
-			if (countingAgents != null) {
-				for (CountingAgentInfo countingAgent : countingAgents) {
+			if (agent.getCountingAgents() != null) {
+				for (CountingAgentInfo countingAgent : agent.getCountingAgents()) {
 					if (newCountingAgent.getAgentId().equals(countingAgent.getAgentId())) {
 						tempCountingAgents.add(countingAgent);
 						exists = true;
@@ -56,12 +54,12 @@ public class DistributeBehaviour extends CyclicBehaviour {
 				tempCountingAgents.add(newCountingAgent);
 			}
 		}
-		countingAgents = tempCountingAgents;
+		agent.setCountingAgents(tempCountingAgents);
 		
 		MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
 		ACLMessage msg = agent.receive(mt);
 		if (msg != null) {
-			for (CountingAgentInfo countingAgent : countingAgents) {
+			for (CountingAgentInfo countingAgent : agent.getCountingAgents()) {
 				if (countingAgent.getAgentId().equals(msg.getSender())) {
 					countingAgent.setStatus(CountingAgentStatus.Ready);
 				}
@@ -70,7 +68,7 @@ public class DistributeBehaviour extends CyclicBehaviour {
 	}
 	
 	private void sendMatrix() {
-		for (CountingAgentInfo countingAgent : countingAgents) {
+		for (CountingAgentInfo countingAgent : agent.getCountingAgents()) {
 			if (CountingAgentStatus.Ready.equals(countingAgent.getStatus())) {
 				ACLMessage msg = new ACLMessage(ACLMessage.CFP);
 				msg.addReceiver(countingAgent.getAgentId());
@@ -109,7 +107,7 @@ public class DistributeBehaviour extends CyclicBehaviour {
 				e.printStackTrace();
 			}
 			
-			//printMatrix(agent.getResultMatrix()); // wyswietlanie macierzy
+			System.out.println(agent.getResultMatrix()); // wyswietlanie macierzy
 		}
 	}
 	
@@ -130,17 +128,7 @@ public class DistributeBehaviour extends CyclicBehaviour {
 				e.printStackTrace();
 			}
 			
-			//printMatrix(agent.getResultMatrix()); // wyswietlanie macierzy
-		}
-	}
-	
-	// TODO przeniesc
-	private void printMatrix(Matrix m) {
-		for (double[] r : m.getValues()) {
-			for (double v : r) {
-				System.out.print(v + "\t");
-			}
-			System.out.println();
+			// System.out.println(agent.getResultMatrix()); // wyswietlanie macierzy
 		}
 	}
 }
