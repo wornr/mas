@@ -3,6 +3,7 @@ package lab2.behaviours;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -61,7 +62,14 @@ public class DistributeBehaviour extends CyclicBehaviour {
 		if (msg != null) {
 			for (CountingAgentInfo countingAgent : agent.getCountingAgents()) {
 				if (countingAgent.getAgentId().equals(msg.getSender())) {
-					countingAgent.setStatus(CountingAgentStatus.Ready);
+					ACLMessage reply = msg.createReply();
+					if (!CountingAgentStatus.Banned.equals(countingAgent.getStatus())) {
+						countingAgent.setStatus(CountingAgentStatus.Ready);
+						reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+					} else {
+						reply.setPerformative(ACLMessage.CANCEL);
+					}
+					agent.send(reply);
 				}
 			}
 		}
@@ -101,8 +109,12 @@ public class DistributeBehaviour extends CyclicBehaviour {
 			try {
 				MatrixFragment mf = (MatrixFragment) msg.getContentObject();
 				if (MatrixFragmentState.Calculated.equals(mf.getState()))
-					agent.getResultMatrix().setValue(mf.getRowIndex(), mf.getColIndex(), mf.getResult());
-				System.out.println(agent.getLocalName() + ": otrzymalem wynik fragmentu (" + mf.getRowIndex() + ";" + mf.getColIndex() + ") od agenta " + msg.getSender().getLocalName());
+					if (new Random().nextInt(100) > 20) {
+						agent.addBehaviour(new VerificationBehaviour(msg.getSender(), mf));
+					} else {
+						agent.getResultMatrix().setValue(mf.getRowIndex(), mf.getColIndex(), mf.getResult());
+						System.out.println(agent.getLocalName() + ": otrzymalem wynik fragmentu (" + mf.getRowIndex() + ";" + mf.getColIndex() + ") od agenta " + msg.getSender().getLocalName());
+					}
 			} catch (UnreadableException e) {
 				e.printStackTrace();
 			}

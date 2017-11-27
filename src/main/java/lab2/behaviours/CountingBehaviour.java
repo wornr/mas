@@ -17,6 +17,7 @@ public class CountingBehaviour extends CyclicBehaviour {
 
 	private CountingAgent agent;
 	private MatrixFragment mf;
+	private int failureChance;
 	
 	public CountingBehaviour(CountingAgent agent) {
 		super();
@@ -33,6 +34,8 @@ public class CountingBehaviour extends CyclicBehaviour {
 			case Ready:
 				processMatrix();
 				break;
+			default:
+				break;
 		}
 	}
 	
@@ -47,9 +50,19 @@ public class CountingBehaviour extends CyclicBehaviour {
 	}
 	
 	private void processMatrix() {
-		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchReplyWith(agent.getLocalName()), MessageTemplate.MatchPerformative(ACLMessage.CFP));
+		MessageTemplate mt = MessageTemplate.or(
+				MessageTemplate.and(MessageTemplate.MatchReplyWith(agent.getLocalName()), MessageTemplate.MatchPerformative(ACLMessage.CFP)), 
+				MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF));
 		ACLMessage msg = agent.receive(mt);
 		if (msg != null) {
+			switch(msg.getPerformative()) {
+				case ACLMessage.QUERY_IF:
+					failureChance = 0;
+					break;
+				default:
+					failureChance = 20;
+					break;
+			}
 			ACLMessage reply = msg.createReply();
 			agent.setStatus(CountingAgentStatus.Busy);
 			try {
@@ -58,11 +71,16 @@ public class CountingBehaviour extends CyclicBehaviour {
 				e.printStackTrace();
 			}
 			
-			if (new Random().nextInt(100) > 20) {
-				reply.setPerformative(ACLMessage.CONFIRM);
+			if (new Random().nextInt(100) > failureChance) {
+				if (failureChance == 0) {
+					reply.setPerformative(ACLMessage.AGREE);
+					reply.setReplyWith(msg.getReplyWith());
+				} else {
+					reply.setPerformative(ACLMessage.CONFIRM);
+				}
 				
 				System.out.println(agent.getLocalName() + ": rozpoczynam obliczenia");
-				mf.setResult(calculate(mf));
+				mf.setResult(agent.calculate(mf));
 				try {
 					reply.setContentObject(mf);
 				} catch (IOException e1) {
@@ -89,15 +107,5 @@ public class CountingBehaviour extends CyclicBehaviour {
 				agent.doWait(agent.getDelay());
 			}
 		}
-	}
-	
-	private double calculate(MatrixFragment mf) {
-		double result = 0.0d;
-		
-		for (int i = 0; i < mf.getSize(); i++) {
-			result += mf.getCol()[i] * mf.getRow()[i];
-		}
-		
-		return result;
 	}
 }

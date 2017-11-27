@@ -6,6 +6,7 @@ import jade.core.Agent;
 import lab2.behaviours.CountingBehaviour;
 import lab2.enums.CountingAgentStatus;
 import lab2.helpers.DFServiceHelper;
+import lab2.models.MatrixFragment;
 
 @SuppressWarnings("serial")
 public class CountingAgent extends Agent {
@@ -22,6 +23,16 @@ public class CountingAgent extends Agent {
 		DFServiceHelper.getInstance().register(this, "matrixCalculator", "calculator");
 		
 		addBehaviour(new CountingBehaviour(this));
+	}
+	
+	public double calculate(MatrixFragment mf) {
+		double result = 0.0d;
+		
+		for (int i = 0; i < mf.getSize(); i++) {
+			result += mf.getCol()[i] * mf.getRow()[i];
+		}
+		
+		return result;
 	}
 	
 	public int getDelay() {
