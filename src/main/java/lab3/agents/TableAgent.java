@@ -8,6 +8,8 @@ import jade.core.Agent;
 import jade.domain.AMSService;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
+import lab3.behaviours.TableBehaviour;
+import lab3.helpers.DFServiceHelper;
 
 @SuppressWarnings("serial")
 public class TableAgent extends Agent {
@@ -18,7 +20,10 @@ public class TableAgent extends Agent {
 	
 	@Override
 	protected void setup() {
-		kebabs = 250;
+		kebabs = 25;
+		
+		DFServiceHelper.getInstance().register(this, "table", "table");
+		addBehaviour(new TableBehaviour(this));
 		
 		doWait(250); // wait for Agents to register
 		findAllAgents();
@@ -42,7 +47,7 @@ public class TableAgent extends Agent {
 		}
 		
 		if (philosophers.size() != forks.size()) {
-			// TODO zabić agentow i wyswietlic komunikat
+			// TODO przerwac dzialanie aplikacji (liczba filozofow musi byc rowna liczbie widelcow)
 		}
 	}
 	
@@ -72,5 +77,14 @@ public class TableAgent extends Agent {
 	
 	public static List<AID> getForks() {
 		return forks;
+	}
+	
+	public static int getKebabs() {
+		return kebabs;
+	}
+	
+	public void removeKebab() {
+		kebabs--;
+		System.out.println("Zjedzono kebaba, " + (kebabs > 4 || kebabs == 0 ? "pozostalo: " : (kebabs > 1 ? "pozostaly: " : "pozostał: ")) + kebabs);
 	}
 }
