@@ -21,7 +21,6 @@ public class PhilosopherMainBehaviour extends TickerBehaviour {
 
 	@Override
 	protected void onTick() {
-		// TODO wlasciwa logika
 		if (TableAgent.getKebabs() > 0) {
 			if (!agent.isLeftPickedUp() && !agent.isRightPickedUp()) {
 				ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);

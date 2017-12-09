@@ -3,11 +3,18 @@ package lab3.agents;
 import java.util.ArrayList;
 import java.util.List;
 
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.AMSService;
+import jade.domain.FIPANames.ContentLanguage;
+import jade.domain.FIPANames.InteractionProtocol;
 import jade.domain.FIPAAgentManagement.AMSAgentDescription;
 import jade.domain.FIPAAgentManagement.SearchConstraints;
+import jade.domain.JADEAgentManagement.JADEManagementOntology;
+import jade.domain.JADEAgentManagement.KillAgent;
+import jade.lang.acl.ACLMessage;
 import lab3.behaviours.TableBehaviour;
 import lab3.helpers.DFServiceHelper;
 
@@ -24,6 +31,9 @@ public class TableAgent extends Agent {
 		
 		DFServiceHelper.getInstance().register(this, "table", "table");
 		addBehaviour(new TableBehaviour(this));
+		
+		getContentManager().registerLanguage(new SLCodec(), ContentLanguage.FIPA_SL0);
+		getContentManager().registerOntology(JADEManagementOntology.getInstance());
 		
 		doWait(250); // wait for Agents to register
 		findAllAgents();
@@ -46,8 +56,9 @@ public class TableAgent extends Agent {
 			findAllForks(agents);
 		}
 		
-		if (philosophers.size() != forks.size()) {
-			// TODO przerwac dzialanie aplikacji (liczba filozofow musi byc rowna liczbie widelcow)
+		if (forks.size() < philosophers.size()) {
+			killAgents(philosophers);
+			killAgents(forks);
 		}
 	}
 	
@@ -68,6 +79,31 @@ public class TableAgent extends Agent {
 			if (agents[i].getName().getLocalName().startsWith("fork")) {
 				forks.add(agents[i].getName());
 			}
+		}
+	}
+	
+	private void killAgents(List<AID> agents) {
+		for (AID kaid : agents) {
+			try {
+				KillAgent ka = new KillAgent();
+				ka.setAgent(kaid);
+				
+				Action kaction = new Action();
+				kaction.setActor(getAMS());
+				kaction.setAction(ka);
+	
+				ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+				request.setSender(getAID());
+				request.clearAllReceiver();
+				request.addReceiver(getAMS());
+				request.setProtocol(InteractionProtocol.FIPA_REQUEST);
+				request.setLanguage(ContentLanguage.FIPA_SL0);
+				request.setOntology(JADEManagementOntology.NAME);
+				getContentManager().fillContent(request, kaction);
+				send(request);
+		    } catch(Exception fe) {
+		      fe.printStackTrace();
+		    }
 		}
 	}
 	
